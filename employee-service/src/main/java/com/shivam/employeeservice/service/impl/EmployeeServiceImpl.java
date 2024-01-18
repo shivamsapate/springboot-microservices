@@ -6,6 +6,7 @@ import com.shivam.employeeservice.dto.EmployeeDto;
 import com.shivam.employeeservice.entity.Employee;
 import com.shivam.employeeservice.exception.ResourceNotFoundException;
 import com.shivam.employeeservice.repository.EmployeeRepository;
+import com.shivam.employeeservice.service.APIClient;
 import com.shivam.employeeservice.service.EmployeeService;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -23,8 +24,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     private ModelMapper modelMapper;
 
 //    private RestTemplate restTemplate;
-    private WebClient webClient;
-    
+//    private WebClient webClient;
+    private APIClient apiClient;
+
     @Override
     public EmployeeDto saveEmployee(EmployeeDto employeeDto) {
         Employee employee = mapToEntity(employeeDto);
@@ -44,12 +46,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 //        ResponseEntity<DepartmentDto> responseDto = restTemplate.getForEntity("http://localhost:8081/api/departments/" + employee.getDepartmentCode(),
 //                DepartmentDto.class);
 
-        DepartmentDto departmentDto = webClient.get()
-                .uri("http://localhost:8081/api/departments/" + employee.getDepartmentCode())
-                .retrieve()
-                .bodyToMono(DepartmentDto.class)
-                .block();
+//        DepartmentDto departmentDto = webClient.get()
+//                .uri("http://localhost:8081/api/departments/" + employee.getDepartmentCode())
+//                .retrieve()
+//                .bodyToMono(DepartmentDto.class)
+//                .block();
 
+        DepartmentDto departmentDto = apiClient.getDepartment(employee.getDepartmentCode());
 
         APIResponseDto apiResponseDto = new APIResponseDto();
         apiResponseDto.setEmployee(mapToDto(employee));
