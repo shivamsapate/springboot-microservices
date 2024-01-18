@@ -2,6 +2,7 @@ package com.shivam.employeeservice.service.impl;
 
 import com.shivam.employeeservice.dto.EmployeeDto;
 import com.shivam.employeeservice.entity.Employee;
+import com.shivam.employeeservice.exception.ResourceNotFoundException;
 import com.shivam.employeeservice.repository.EmployeeRepository;
 import com.shivam.employeeservice.service.EmployeeService;
 import lombok.AllArgsConstructor;
@@ -27,7 +28,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeDto getEmployeeById(Long id) {
-        Employee employee = employeeRepository.findById(id).get();
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Employee","id", id.toString()));
         return mapToDto(employee);
     }
 
