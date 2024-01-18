@@ -12,6 +12,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @AllArgsConstructor
 @Service
@@ -21,8 +22,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private ModelMapper modelMapper;
 
-    private RestTemplate restTemplate;
-
+//    private RestTemplate restTemplate;
+    private WebClient webClient;
+    
     @Override
     public EmployeeDto saveEmployee(EmployeeDto employeeDto) {
         Employee employee = mapToEntity(employeeDto);
@@ -38,15 +40,20 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Employee","id", id.toString()));
 
-        //Api call for department service
-        ResponseEntity<DepartmentDto> responseDto = restTemplate.getForEntity("http://localhost:8081/api/departments/" + employee.getDepartmentCode(),
-                DepartmentDto.class);
+//        //Api call for department service
+//        ResponseEntity<DepartmentDto> responseDto = restTemplate.getForEntity("http://localhost:8081/api/departments/" + employee.getDepartmentCode(),
+//                DepartmentDto.class);
 
-        DepartmentDto responseDepartmentDto = responseDto.getBody();
+        DepartmentDto departmentDto = webClient.get()
+                .uri("http://localhost:8081/api/departments/" + employee.getDepartmentCode())
+                .retrieve()
+                .bodyToMono(DepartmentDto.class)
+                .block();
+
 
         APIResponseDto apiResponseDto = new APIResponseDto();
         apiResponseDto.setEmployee(mapToDto(employee));
-        apiResponseDto.setDepartment(responseDepartmentDto);
+        apiResponseDto.setDepartment(departmentDto);
         return apiResponseDto;
     }
 
