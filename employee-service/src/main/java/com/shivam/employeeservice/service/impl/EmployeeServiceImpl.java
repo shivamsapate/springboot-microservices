@@ -8,6 +8,7 @@ import com.shivam.employeeservice.exception.ResourceNotFoundException;
 import com.shivam.employeeservice.repository.EmployeeRepository;
 import com.shivam.employeeservice.service.APIClient;
 import com.shivam.employeeservice.service.EmployeeService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private ModelMapper modelMapper;
 
 //    private RestTemplate restTemplate;
-//    private WebClient webClient;
-    private APIClient apiClient;
+    private WebClient webClient;
+//    private APIClient apiClient;
 
     @Override
     public EmployeeDto saveEmployee(EmployeeDto employeeDto) {
@@ -37,6 +38,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @CircuitBreaker(name = "${spring.application.name}", fallbackMethod = "getDefaultDepartment" )
     public APIResponseDto getEmployeeById(Long id) {
 
         Employee employee = employeeRepository.findById(id)
@@ -46,13 +48,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 //        ResponseEntity<DepartmentDto> responseDto = restTemplate.getForEntity("http://localhost:8081/api/departments/" + employee.getDepartmentCode(),
 //                DepartmentDto.class);
 
-//        DepartmentDto departmentDto = webClient.get()
-//                .uri("http://localhost:8081/api/departments/" + employee.getDepartmentCode())
-//                .retrieve()
-//                .bodyToMono(DepartmentDto.class)
-//                .block();
+        DepartmentDto departmentDto = webClient.get()
+                .uri("http://localhost:8081/api/departments/" + employee.getDepartmentCode())
+                .retrieve()
+                .bodyToMono(DepartmentDto.class)
+                .block();
 
-        DepartmentDto departmentDto = apiClient.getDepartment(employee.getDepartmentCode());
+//        DepartmentDto departmentDto = apiClient.getDepartment(employee.getDepartmentCode());
 
         APIResponseDto apiResponseDto = new APIResponseDto();
         apiResponseDto.setEmployee(mapToDto(employee));
@@ -67,5 +69,20 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private Employee mapToEntity(EmployeeDto employeeDto) {
         return modelMapper.map(employeeDto, Employee.class);
+    }
+
+    public APIResponseDto getDefaultDepartment(Long id,Exception exception) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Employee","id", id.toString()));
+
+        DepartmentDto departmentDto = new DepartmentDto();
+        departmentDto.setDepartmentName("R&D Department");
+        departmentDto.setDepartmentCode("RD001");
+        departmentDto.setDepartmentDescription("Research and Development Department");
+
+        APIResponseDto apiResponseDto = new APIResponseDto();
+    apiResponseDto.setEmployee(mapToDto(employee));
+        apiResponseDto.setDepartment(departmentDto);
+        return apiResponseDto;
     }
 }
