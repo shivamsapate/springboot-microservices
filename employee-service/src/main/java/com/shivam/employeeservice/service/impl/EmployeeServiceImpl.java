@@ -3,6 +3,7 @@ package com.shivam.employeeservice.service.impl;
 import com.shivam.employeeservice.dto.APIResponseDto;
 import com.shivam.employeeservice.dto.DepartmentDto;
 import com.shivam.employeeservice.dto.EmployeeDto;
+import com.shivam.employeeservice.dto.OrganizationDto;
 import com.shivam.employeeservice.entity.Employee;
 import com.shivam.employeeservice.exception.ResourceNotFoundException;
 import com.shivam.employeeservice.repository.EmployeeRepository;
@@ -60,11 +61,18 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .bodyToMono(DepartmentDto.class)
                 .block();
 
+        OrganizationDto organizationDto = webClient.get()
+                .uri("http://localhost:8083/api/organizations/" + employee.getOrganizationCode())
+                .retrieve()
+                .bodyToMono(OrganizationDto.class)
+                .block();
+
 //        DepartmentDto departmentDto = apiClient.getDepartment(employee.getDepartmentCode());
 
         APIResponseDto apiResponseDto = new APIResponseDto();
         apiResponseDto.setEmployee(mapToDto(employee));
         apiResponseDto.setDepartment(departmentDto);
+        apiResponseDto.setOrganizationDto(organizationDto);
         return apiResponseDto;
     }
 
